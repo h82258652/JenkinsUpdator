@@ -1,0 +1,20 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    var installedPlugins = (List<string>)ViewData["InstalledPlugins"];
+}
+
+@ViewData["Message"]
+<table>
+    @foreach (var installedPlugin in installedPlugins)
+    {
+        <tr>
+            <td>@installedPlugin</td>
+            <td>
+                <form asp-action="Update" method="post">
+                    <input type="hidden" name="plugin" value="@installedPlugin" />
+                    <input type="submit" value="更新" />
+                </form>
+            </td>
+        </tr>
+    }
+</table>
