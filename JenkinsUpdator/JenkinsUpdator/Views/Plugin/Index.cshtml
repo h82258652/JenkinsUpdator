@@ -4,17 +4,24 @@
 }
 
 @ViewData["Message"]
-<table>
-    @foreach (var installedPlugin in installedPlugins)
-    {
-        <tr>
-            <td>@installedPlugin</td>
-            <td>
-                <form asp-action="Update" method="post">
-                    <input type="hidden" name="plugin" value="@installedPlugin" />
-                    <input type="submit" value="更新" />
-                </form>
-            </td>
-        </tr>
-    }
-</table>
+@if (installedPlugins.Count <= 0)
+{
+    <div>没有插件需要更新</div>
+}
+else
+{
+    <table>
+        @foreach (var installedPlugin in installedPlugins)
+        {
+            <tr>
+                <td>@installedPlugin</td>
+                <td>
+                    <form asp-action="Update" method="post">
+                        <input type="hidden" name="plugin" value="@installedPlugin" />
+                        <input type="submit" value="更新" />
+                    </form>
+                </td>
+            </tr>
+        }
+    </table>
+}
