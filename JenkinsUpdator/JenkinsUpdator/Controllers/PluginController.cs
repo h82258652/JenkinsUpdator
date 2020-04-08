@@ -1,9 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using JenkinsUpdator.Models;
 
 namespace JenkinsUpdator.Controllers
 {
@@ -18,12 +23,21 @@ namespace JenkinsUpdator.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var pluginFolder = Path.Combine(_configuration["JenkinsFolder"], "plugins");
-            var installedPlugins = Directory.GetFiles(pluginFolder, "*.jpi").Select(Path.GetFileNameWithoutExtension).ToList();
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.BaseAddress = new Uri(_configuration["Jenkins:UrlBase"]);
 
-            ViewData["InstalledPlugins"] = installedPlugins;
+            var username = _configuration["Jenkins:Username"];
+            var apiToken = _configuration["Jenkins:ApiToken"];
+            var authorization = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{apiToken}"));
+            httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Basic {authorization}");
+
+            var json = await httpClient.GetStringAsync("/pluginManager/api/json?depth=1");
+            var result = JsonSerializer.Deserialize<JenkinsApiResult>(json);
+            var hasUpdatePlugins = result.Plugins.Where(temp => temp.HasUpdate).Select(temp => temp.ShortName).ToList();
+
+            ViewData["InstalledPlugins"] = hasUpdatePlugins;
 
             return View();
         }
